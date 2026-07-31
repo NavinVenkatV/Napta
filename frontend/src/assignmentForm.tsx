@@ -10,7 +10,7 @@ function AssignmentForm({ onCreated } : any) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e : React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e : React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     try {
