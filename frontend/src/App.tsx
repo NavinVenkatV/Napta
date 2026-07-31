@@ -1,121 +1,130 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+// App.jsx
 import './App.css'
+import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
+import axios from 'axios'
+
+const AssignmentForm = lazy(() => import('./assignmentForm'))
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [employees, setEmployees] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+
+  const getEmployees = async () => {
+    setLoading(true)
+    try {
+      const response = await axios.get('http://localhost:8000/employees')
+      setEmployees(response.data)
+    } catch (e) {
+      console.log('Error getting employees', e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    getEmployees()
+  }, [])
+
+  const overloadedCount = useMemo(
+    () => employees.filter(emp => emp.total_hours > 35).length,
+    [employees]
+  )
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+   
+      <header className="bg-slate-900 text-white px-8 py-5 flex items-center justify-between shadow-md">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
+          <h1 className="text-xl font-semibold tracking-tight">Staffing Tracker</h1>
+          <p className="text-slate-400 text-sm">Employee workload overview</p>
         </div>
         <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+          onClick={() => setShowForm(!showForm)}
+          className="bg-white text-slate-900 px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-200 transition"
         >
-          Count is {count}
+          {showForm ? 'Close' : '+ Add assignment'}
         </button>
-      </section>
+      </header>
 
-      <div className="ticks"></div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-10">
+      
+        <div className="flex gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-lg px-5 py-4 flex-1">
+            <p className="text-slate-500 text-xs uppercase tracking-wide">Employees</p>
+            <p className="text-2xl font-semibold text-slate-900">{employees.length}</p>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-lg px-5 py-4 flex-1">
+            <p className="text-slate-500 text-xs uppercase tracking-wide">Overloaded (&gt;35h)</p>
+            <p className={`text-2xl font-semibold ${overloadedCount > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+              {overloadedCount}
+            </p>
+          </div>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    
+        {showForm && (
+          <Suspense fallback={<p className="text-slate-400 text-sm mb-6">Loading form...</p>}>
+            <AssignmentForm onCreated={getEmployees} />
+          </Suspense>
+        )}
+
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-100 text-slate-600 text-left uppercase text-xs tracking-wide">
+                <th className="px-5 py-3">Name</th>
+                <th className="px-5 py-3">Total hours</th>
+                <th className="px-5 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={3} className="px-5 py-6 text-center text-slate-400">
+                    Loading employees...
+                  </td>
+                </tr>
+              )}
+
+              {!loading && employees.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-5 py-6 text-center text-slate-400">
+                    No employees found.
+                  </td>
+                </tr>
+              )}
+
+              {!loading &&
+                employees.map(emp => (
+                  <tr key={emp.id} className="border-t border-slate-100">
+                    <td className="px-5 py-3 text-slate-800 font-medium">{emp.id}</td>
+                    <td className="px-5 py-3 text-slate-800 font-medium">{emp.name}</td>
+                    <td className="px-5 py-3 text-slate-600">{emp.total_hours}h</td>
+                    <td className="px-5 py-3">
+                      {emp.total_hours > 35 ? (
+                        <span className="inline-flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded text-xs font-medium">
+                          Overloaded
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-1 rounded text-xs font-medium">
+                          OK
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200 px-8 py-4 text-center text-slate-400 text-xs">
+        Staffing Tracker — practice project
+      </footer>
+    </div>
   )
 }
 

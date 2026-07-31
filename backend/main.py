@@ -1,20 +1,25 @@
 from fastapi import FastAPI
 from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 class type_check(BaseModel):
         project_id  : int
         employee_id : int
-        totat_hours : int
+        total_hours : int
 
 import pymysql
  
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5174"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-
-@app.get("/employees") #-> getting all the employees
-def get_employees():
-    connection = pymysql.connect(
+def getConnection():
+    return pymysql.connect(
          host="SG-famous-lyric-7914-14246-mysql-master.servers.mongodirector.com",
             port=3306,
             user="sgroot",
@@ -22,6 +27,11 @@ def get_employees():
             database="staffing",
             ssl={"ssl": {}}
     )
+
+
+@app.get("/employees") #-> getting all the employees
+def get_employees():
+    connection = getConnection()
     try:
         cursor = connection.cursor()
         cursor.execute("""
@@ -43,22 +53,16 @@ def get_employees():
         cursor.close()
 
 
-@app.post('/assignments')
+@app.post('/assignments') #-> just assigning the project to the employee with working hours
 def assignments(assignment_ids : type_check):
-    connection = pymysql.connect(
-             host="SG-famous-lyric-7914-14246-mysql-master.servers.mongodirector.com",
-                port=3306,
-                user="sgroot",
-                password="dRnPAF893B2.xbuk",
-                database="staffing",
-                ssl={"ssl": {}}
-        )
+    connection = getConnection()
     try:
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO assignment (employee_id, project_id, total_hours) VALUES (%s, %s, %s)", (assignment_ids.employee_id, 
-                                                                                                            assignment_ids.project_id,
-                                                                                                            assignment_ids.totat_hours))
-        cursor.commit()
+        cursor.execute("INSERT INTO assignment (employee_id, project_id, total_hours) VALUES (%s, %s, %s)", 
+            (assignment_ids.employee_id, 
+             assignment_ids.project_id,
+             assignment_ids.total_hours))
+        connection.commit()
     except pymysql.err.IntegrityError:
         raise HTTPException(status_code=400, detail="employee_id or project_id does not exist")
 
