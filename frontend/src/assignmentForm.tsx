@@ -1,16 +1,16 @@
 // AssignmentForm.jsx
-import { useState } from 'react'
+import React, { useState } from 'react'
 import axios from 'axios'
 
-function AssignmentForm({ onCreated }) {
+function AssignmentForm({ onCreated } : any) {
   const [form, setForm] = useState({ employee_id: '', project_id: '', total_hours: '' })
   const [error, setError] = useState('')
 
-  const handleChange = (e) => {
+  const handleChange = (e : React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e : React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     try {
@@ -22,7 +22,7 @@ function AssignmentForm({ onCreated }) {
       console.log('xxxxxxxxxxxxxxxxxxxxxxxx', response)
       setForm({ employee_id: '', project_id: '', total_hours: '' })
       onCreated()
-    } catch (err) {
+    } catch (err : any) {
       setError(err.response?.data?.detail || 'Something went wrong')
     }
   }

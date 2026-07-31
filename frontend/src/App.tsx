@@ -4,6 +4,11 @@ import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import axios from 'axios'
 
 const AssignmentForm = lazy(() => import('./assignmentForm'))
+interface Employee {
+  id : number, 
+  name : string, 
+  total_hours : number
+}
 
 function App() {
   const [employees, setEmployees] = useState([])
@@ -27,7 +32,7 @@ function App() {
   }, [])
 
   const overloadedCount = useMemo(
-    () => employees.filter(emp => emp.total_hours > 35).length,
+    () => employees.filter((emp : Employee) => emp.total_hours > 35).length,
     [employees]
   )
 
@@ -97,7 +102,7 @@ function App() {
               )}
 
               {!loading &&
-                employees.map(emp => (
+                employees.map((emp : Employee) => (
                   <tr key={emp.id} className="border-t border-slate-100">
                     <td className="px-5 py-3 text-slate-800 font-medium">{emp.id}</td>
                     <td className="px-5 py-3 text-slate-800 font-medium">{emp.name}</td>
